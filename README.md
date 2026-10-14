@@ -12,31 +12,37 @@ Full-stack plant disease classification starter built with Next.js, FastAPI, PyT
 - Responsive dashboard, image upload, prediction results, scan history, CSV export, disease library, service/model status
 - API smoke tests and GitHub Actions CI
 
-## Local setup (Windows PowerShell)
+## Python version
+This guide is adapted for **Python 3.14**. The dependency files use version ranges rather than requiring Python 3.11. PyTorch and torchvision must provide compatible wheels for your Python version and platform; if pip reports that no compatible distribution exists, use a Python version supported by the selected PyTorch release rather than forcing an install.
+
+## Local setup (Windows CMD)
 
 ### Backend
-```powershell
-cd backend
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
+Run these commands in CMD:
+```bat
+cd /d D:\Projects\Plant-Disease-Classifier\backend
+py -3.14 -m venv .venv
+.venv\Scripts\activate
+python --version
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-Copy-Item .env.example .env
-uvicorn app.main:app --reload --port 8000
+copy .env.example .env
+python -m uvicorn app.main:app --reload --port 8000
 ```
-API docs at http://localhost:8000/docs
+API docs at http://localhost:8000/docs. Keep this terminal open while testing.
 
-### Frontend (new terminal)
-```powershell
-cd frontend
-Copy-Item .env.example .env.local
+### Frontend (new CMD window)
+```bat
+cd /d D:\Projects\Plant-Disease-Classifier\frontend
+copy .env.example .env.local
 npm install
 npm run dev
 ```
 Open http://localhost:3000.
 
 ### Optional PostgreSQL
-```powershell
+```bat
+cd /d D:\Projects\Plant-Disease-Classifier
 docker compose up -d db
 ```
 Set `DATABASE_URL=postgresql+psycopg://agrivision:agrivision_dev_only@localhost:5432/agrivision` in `backend/.env`. These credentials are for local development only; change them before use beyond local testing.
@@ -47,16 +53,26 @@ Download PlantVillage separately from https://github.com/spMohanty/PlantVillage-
 data/plantvillage/
   Tomato___Early_blight/
   Tomato___healthy/
-  ...
+  ... one folder per class
 ```
-From the repository root:
-```powershell
-py -3.11 -m venv .venv-ml
-.\.venv-ml\Scripts\Activate.ps1
-pip install -r ml/requirements.txt
-python ml/train.py --data-dir data/plantvillage --output-dir backend/models --epochs 5
+From the repository root in CMD:
+```bat
+cd /d D:\Projects\Plant-Disease-Classifier
+py -3.14 -m venv .venv-ml
+.venv-ml\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r ml\requirements.txt
+python ml\train.py --data-dir data\plantvillage --output-dir backend\models --epochs 5
 ```
+If installation reports that torch or torchvision has no compatible distribution, stop and use a Python version supported by the available PyTorch wheels. Do not install packages globally to work around the error.
+
 Set `MODEL_PATH=models/plant_disease_resnet18.pt` and `CLASS_NAMES_PATH=models/class_names.json` in `backend/.env`, then restart the API. Actual metrics are written by your run; no results are claimed in advance.
+
+To evaluate a separately prepared ImageFolder test set:
+```bat
+python ml\evaluate.py --data-dir data\field-test --checkpoint backend\models\plant_disease_resnet18.pt --output reports\field-evaluation.json
+```
+The test set's class folder names and ordering must match the checkpoint. Do not use training images as an independent test set.
 
 ## API
 - `GET /health` — database and model readiness
