@@ -1,0 +1,3 @@
+# ML pipeline
+
+Download PlantVillage separately and arrange it in torchvision ImageFolder format. No dataset or weights are distributed here. Run the training command from the root README. The first-pass training uses a deterministic image-level split and ResNet18 transfer learning. Near-duplicate images and source-specific backgrounds can inflate metrics; deduplicate, consider group-aware splits, and validate with an independently collected field-image test set. Document data provenance and usage terms.
