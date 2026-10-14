@@ -25,7 +25,7 @@ py -3.14 -m venv .venv
 .venv\Scripts\activate
 python --version
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 copy .env.example .env
 python -m uvicorn app.main:app --reload --port 8000
 ```
@@ -47,21 +47,23 @@ docker compose up -d db
 ```
 Set `DATABASE_URL=postgresql+psycopg://agrivision:agrivision_dev_only@localhost:5432/agrivision` in `backend/.env`. These credentials are for local development only; change them before use beyond local testing.
 
-## Train a real model
-Download PlantVillage separately from https://github.com/spMohanty/PlantVillage-Dataset and organize it as an ImageFolder dataset:
+## Download and train a real model
+The dataset and model weights are **not committed to GitHub**: the dataset is large and its usage terms must be reviewed independently. Download PlantVillage separately from https://github.com/spMohanty/PlantVillage-Dataset. The helper script downloads only the upstream `raw/color` folder into a local `data/plantvillage` ImageFolder layout. It requires Git for Windows and internet access.
+
+From the repository root in **PowerShell** (not CMD), run:
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\download_plantvillage.ps1
 ```
-data/plantvillage/
-  Tomato___Early_blight/
-  Tomato___healthy/
-  ... one folder per class
-```
-From the repository root in CMD:
+The execution-policy command only applies to the current PowerShell process. The script does not alter machine-wide policy. If organizational policy blocks scripts, do not bypass it; follow your administrator's approved method and download/arrange the dataset manually.
+
+Then return to **CMD** at the repository root:
 ```bat
 cd /d D:\Projects\Plant-Disease-Classifier
 py -3.14 -m venv .venv-ml
 .venv-ml\Scripts\activate
 python -m pip install --upgrade pip
-pip install -r ml\requirements.txt
+python -m pip install -r ml\requirements.txt
 python ml\train.py --data-dir data\plantvillage --output-dir backend\models --epochs 5
 ```
 If installation reports that torch or torchvision has no compatible distribution, stop and use a Python version supported by the available PyTorch wheels. Do not install packages globally to work around the error.
@@ -73,6 +75,8 @@ To evaluate a separately prepared ImageFolder test set:
 python ml\evaluate.py --data-dir data\field-test --checkpoint backend\models\plant_disease_resnet18.pt --output reports\field-evaluation.json
 ```
 The test set's class folder names and ordering must match the checkpoint. Do not use training images as an independent test set.
+
+The initial training script uses a deterministic **image-level** split, which can overstate performance when near-duplicate images or source-specific backgrounds cross splits. Deduplicate images, consider group-aware splits, and validate on independently collected field photos. Document dataset provenance and usage terms. **90% accuracy is a target, not a guaranteed or currently measured result.**
 
 ## API
 - `GET /health` — database and model readiness
